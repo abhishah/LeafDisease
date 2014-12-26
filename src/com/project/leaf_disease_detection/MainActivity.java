@@ -2,7 +2,6 @@ package com.project.leaf_disease_detection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 	private static final String TAG = "OCVSample::Activity";
 
 	private MyCameraView mOpenCvCameraView;
-	private List<android.hardware.Camera.Size> mResolutionList;
+	// private List<android.hardware.Camera.Size> mResolutionList;
 	private Mat mRgba;
 	private Mat mGray;
 	private static Mat centersofcluster;
@@ -153,21 +152,16 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		Imgproc.cvtColor(mGray, mGray, Imgproc.COLOR_RGB2Lab);
 		Imgproc.medianBlur(mGray, mGray, 1);
 		// Imgproc.cvtColor(mGray, mGray, Imgproc.COLOR_Lab2LRGB);
-		/*int pixel_index = 0;
-		Mat singlechannel = Mat.zeros(mGray.cols() * mGray.rows(), 3,
-				CvType.CV_32F);
-		for (int i = 0; i < mGray.rows(); i++) {
-			for (int j = 0; j < mGray.cols(); j++) {
-				double data[] = mGray.get(i, j);
-				singlechannel.put(pixel_index, 0, (float) data[0] / 255.0);
-				singlechannel.put(pixel_index, 1, (float) (data[1]) / 255.0);
-				singlechannel.put(pixel_index, 2, (float) (data[2]) / 255.0);
-				Log.v("pixel r value", " " + data[0] + " " + data[1] + " "
-						+ data[2]);
-				pixel_index++;
-			}
-		}
-		
+		/*
+		 * int pixel_index = 0; Mat singlechannel = Mat.zeros(mGray.cols() *
+		 * mGray.rows(), 3, CvType.CV_32F); for (int i = 0; i < mGray.rows();
+		 * i++) { for (int j = 0; j < mGray.cols(); j++) { double data[] =
+		 * mGray.get(i, j); singlechannel.put(pixel_index, 0, (float) data[0] /
+		 * 255.0); singlechannel.put(pixel_index, 1, (float) (data[1]) / 255.0);
+		 * singlechannel.put(pixel_index, 2, (float) (data[2]) / 255.0);
+		 * Log.v("pixel r value", " " + data[0] + " " + data[1] + " " +
+		 * data[2]); pixel_index++; } }
+		 * 
 		 * int k=3; TermCriteria criteria=new
 		 * TermCriteria(TermCriteria.MAX_ITER+TermCriteria.EPS,10,1.0); Mat
 		 * centers = new Mat(); labels=new Mat(); Core.kmeans(singlechannel, k,
@@ -181,17 +175,16 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		Mat clusteredimage = cluster(mGray, 3).get(0);
 		Imgproc.cvtColor(clusteredimage, clusteredimage, Imgproc.COLOR_RGB2Lab);
 		Mat sampledimage1 = Mat.zeros(mGray.rows(), mGray.cols(), mGray.type());
-		Mat sampledimage2 =  Mat.zeros(mGray.rows(), mGray.cols(), mGray.type());
-		Mat sampledimage3 =  Mat.zeros(mGray.rows(), mGray.cols(), mGray.type());
+		Mat sampledimage2 = Mat.zeros(mGray.rows(), mGray.cols(), mGray.type());
+		Mat sampledimage3 = Mat.zeros(mGray.rows(), mGray.cols(), mGray.type());
 		for (int y = 0; y < mGray.rows(); y++) {
 			for (int x = 0; x < mGray.cols(); x++) {
 				int index = y * mGray.rows() + x;
-				int cluster_index=(int)labels.get(index,0)[0];
+				int cluster_index = (int) labels.get(index, 0)[0];
 
-				
 				if ((int) cluster_index == 0) {
 					Log.v("Cluster index", " " + cluster_index);
-					
+
 					sampledimage1.put(y, x, clusteredimage.get(y, x));
 				} else if ((int) cluster_index == 1) {
 					Log.v("Cluster index", " " + cluster_index);
@@ -204,84 +197,130 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			}
 		}
 		Log.v("elements in center1", centers.size() + "  ");
-		Mat clust1=new Mat();
-		Mat clust2=new Mat();
-		Mat clust3=new Mat();
-		List<Mat>sample1channels=new ArrayList<Mat>();
-		List<Mat>sample2channels=new ArrayList<Mat>();
-		List<Mat>sample3channels=new ArrayList<Mat>();
+		Mat clust1 = new Mat();
+		Mat clust2 = new Mat();
+		Mat clust3 = new Mat();
+		List<Mat> sample1channels = new ArrayList<Mat>();
+		List<Mat> sample2channels = new ArrayList<Mat>();
+		List<Mat> sample3channels = new ArrayList<Mat>();
 		Core.split(sampledimage1, sample1channels);
 		Core.split(sampledimage2, sample2channels);
 		Core.split(sampledimage3, sample3channels);
-		MatOfInt channel1=new MatOfInt();
-		Mat mask=new Mat();
-		MatOfInt mhistsize=new MatOfInt(25);
+		MatOfInt channel1 = new MatOfInt();
+		Mat mask = new Mat();
+		MatOfInt mhistsize = new MatOfInt(25);
 		MatOfFloat mRanges = new MatOfFloat(0f, 256f);
-		Imgproc.calcHist(Arrays.asList(sample1channels.get(2)), channel1, mask, clust1,mhistsize , mRanges);
-		Imgproc.calcHist(Arrays.asList(sample2channels.get(2)), channel1, mask, clust2,mhistsize , mRanges);
-		Imgproc.calcHist(Arrays.asList(sample3channels.get(2)), channel1, mask, clust3,mhistsize , mRanges);
-		double max1=-1;
-		double max2=-1;
-		double max3=-1;
-		Point temp1=new Point(-1,-1);
-		Point temp2=new Point(-1,-1);
-		Point temp3=new Point(-1,-1);
-		double num2=-1;
-		MinMaxLocResult a=Core.minMaxLoc(clust1);
-		max1=a.maxVal;
-		temp1=a.maxLoc;
-		a=Core.minMaxLoc(clust2);
-		max2=a.maxVal;
-		temp2=a.maxLoc;
-		a=Core.minMaxLoc(clust3);
-		max3=a.maxVal;
-		temp3=a.maxLoc;
-		double num=-1;
-		Point firs_in,sec_in;
-		Mat first_min=new Mat();
-		Mat second_min=new Mat();
-		if(max1<max2 && max1<max3){
-			num=max1;
-			firs_in=temp1;
-			first_min=sampledimage1;
-		}else if(max2<max1 && max2<max3){
-			num=max2;
-			firs_in=temp2;
-			first_min=sampledimage2;
-		}else{
-			num=max3;
-			firs_in=temp3;
-			first_min=sampledimage3;
+		Imgproc.calcHist(Arrays.asList(sample1channels.get(2)), channel1, mask,
+				clust1, mhistsize, mRanges);
+		Imgproc.calcHist(Arrays.asList(sample2channels.get(2)), channel1, mask,
+				clust2, mhistsize, mRanges);
+		Imgproc.calcHist(Arrays.asList(sample3channels.get(2)), channel1, mask,
+				clust3, mhistsize, mRanges);
+		sample1channels.clear();
+		sample2channels.clear();
+		sample3channels.clear();
+		mask.release();
+		channel1.release();
+		mhistsize.release();
+		mRanges.release();
+		double max1 = -1;
+		double max2 = -1;
+		double max3 = -1;
+		Point temp1 = new Point(-1, -1);
+		Point temp2 = new Point(-1, -1);
+		Point temp3 = new Point(-1, -1);
+		double num2 = -1;
+		MinMaxLocResult a = Core.minMaxLoc(clust1);
+		max1 = a.maxVal;
+		temp1 = a.maxLoc;
+		a = Core.minMaxLoc(clust2);
+		max2 = a.maxVal;
+		temp2 = a.maxLoc;
+		a = Core.minMaxLoc(clust3);
+		max3 = a.maxVal;
+		temp3 = a.maxLoc;
+		double num = -1;
+		double firs_in, sec_in;
+		Mat first_min = new Mat();
+		Mat second_min = new Mat();
+		if (max1 < max2 && max1 < max3) {
+			num = max1;
+			firs_in = (temp1.x) * clust1.cols() + temp1.y;
+			first_min = sampledimage1;
+		} else if (max2 < max1 && max2 < max3) {
+			num = max2;
+			firs_in = (temp2.x) * clust2.cols() + temp2.y;
+			first_min = sampledimage2;
+		} else {
+			num = max3;
+			firs_in = (temp3.x) * clust3.cols() + temp3.y;
+			first_min = sampledimage3;
 		}
-		if(max1==num && max2<max3){
-			sec_in=temp2;
-			num2=max2;
-			second_min=sampledimage2;
-		}else if(max1==num && max2>max3){
-			sec_in=temp3;
-			num2=max3;
-			second_min=sampledimage3;
-		}else if(max2==num && max1<max3){
-			sec_in=temp1;
-			num2=max1;
-			second_min=sampledimage1;
-		}else if(max2==num && max3<max1){
-			sec_in=temp3;
-			num2=max3;
-			second_min=sampledimage3;
-		}else if(max3==num && max1<max2){
-			sec_in=temp1;
-			num2=max1;
-			second_min=sampledimage1;
-		}else{
-			sec_in=temp2;
-			num2=max2;
-			second_min=sampledimage2;
+		if (max1 == num && max2 < max3) {
+			sec_in = (temp2.x) * clust2.cols() + temp2.y;
+			num2 = max2;
+			second_min = sampledimage2;
+		} else if (max1 == num && max2 > max3) {
+			sec_in = (temp3.x) * clust3.cols() + temp3.y;
+			num2 = max3;
+			second_min = sampledimage3;
+		} else if (max2 == num && max1 < max3) {
+			sec_in = (temp1.x) * clust1.cols() + temp1.y;
+			num2 = max1;
+			second_min = sampledimage1;
+		} else if (max2 == num && max3 < max1) {
+			sec_in = (temp3.x) * clust3.cols() + temp3.y;
+			num2 = max3;
+			second_min = sampledimage3;
+		} else if (max3 == num && max1 < max2) {
+			sec_in = (temp1.x) * clust1.cols() + temp1.y;
+			num2 = max1;
+			second_min = sampledimage1;
+		} else {
+			sec_in = (temp2.x) * clust2.cols() + temp2.y;
+			num2 = max2;
+			second_min = sampledimage2;
 		}
-		
+		List<Mat> channelsfirst_min = new ArrayList<Mat>();
+		Core.split(first_min, channelsfirst_min);
+		channel1 = new MatOfInt();
+		mask = new Mat();
+		mhistsize = new MatOfInt(25);
+		mRanges = new MatOfFloat(0f, 256f);
+		Mat histfirst_min = new Mat();
+		Imgproc.calcHist(Arrays.asList(channelsfirst_min.get(1)), channel1,
+				mask, histfirst_min, mhistsize, mRanges);
+		channelsfirst_min.clear();
+		Core.split(second_min, channelsfirst_min);
+		Mat histsecond_min = new Mat();
+		Imgproc.calcHist(Arrays.asList(channelsfirst_min.get(1)), channel1,
+				mask, histsecond_min, mhistsize, mRanges);
+		Mat idx = new Mat();
+		Core.findNonZero(histfirst_min, idx);
+		MinMaxLocResult first = Core.minMaxLoc(idx);
+		Point max_r1 = first.maxLoc;
+		double max_rin1 = (max_r1.x) * histfirst_min.cols() + max_r1.y;
+		Core.findNonZero(histsecond_min, idx);
+		MinMaxLocResult second = Core.minMaxLoc(idx);
+		Point max_r2 = second.maxLoc;
+		double max_rin2 = (max_r2.x) * histsecond_min.cols() + max_r2.y;
+		double ratio = 0;
+		Mat output;
+		if (num > num2) {
+			ratio = num / num2;
+		} else
+			ratio = num2 / num;
+		if (ratio < 3.5) {
+			if ((sec_in < firs_in) || (sec_in > firs_in)
+					&& (max_rin1 > max_rin2)) {
+				output = second_min;
+			} else
+				output = first_min;
+		} else
+			output = first_min;
 		Log.i("Centers:", " - ");
 		Log.e("Points count:", "sent return");
-		return sampledimage1;
+		return output;
 
 		/*
 		 * Vector<Mat> threeChannels=new Vector<Mat>(3); Core.split(mGray,
@@ -420,7 +459,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		for (int y = 0; y < cutout.rows(); y++) {
 			for (int x = 0; x < cutout.cols(); x++) {
 				int label = (int) labels.get(rows, 0)[0];
-				
+
 				Log.v("Cluster index", " " + label);
 				int r = (int) centers.get(label, 2)[0];
 				int g = (int) centers.get(label, 1)[0];
