@@ -23,6 +23,7 @@ import org.opencv.imgproc.Imgproc;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -35,8 +36,10 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 	private MyCameraView mOpenCvCameraView;
 	// private List<android.hardware.Camera.Size> mResolutionList;
-	private Mat mRgba;
-	private Mat mGray,sampledimage1;
+	private static Mat mRgba;
+	private static Mat mGray;
+
+	private Mat sampledimage1;
 	@SuppressWarnings("unused")
 	private static Mat centersofcluster;
 	Mat clusteredimage;
@@ -180,32 +183,31 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			 * }
 			 */
 			// clusteredimage = cluster(mGray, 3).get(1);
-			List<Mat>clusster=cluster(mGray,3);
-			 sampledimage1 = clusster.get(0);
+			List<Mat> clusster = cluster(mGray, 3);
+			sampledimage1 = clusster.get(0);
 			Mat sampledimage2 = clusster.get(1);
 			Mat sampledimage3 = clusster.get(2);
-			Imgproc.cvtColor(sampledimage1, sampledimage1, Imgproc.COLOR_RGB2Lab);
-			Imgproc.cvtColor(sampledimage2, sampledimage2, Imgproc.COLOR_RGB2Lab);
-			Imgproc.cvtColor(sampledimage3, sampledimage3, Imgproc.COLOR_RGB2Lab);
-		/*	for (int y = 0; y < mGray.rows(); y++) {
-				for (int x = 0; x < mGray.cols(); x++) {
-					int index = y * mGray.rows() + x;
-					int cluster_index = (int) labels.get(index, 0)[0];
+			//Imgproc.cvtColor(sampledimage1, sampledimage1,
+				//	Imgproc.COLOR_RGB2Lab);
+			//Imgproc.cvtColor(sampledimage2, sampledimage2,
+				//	Imgproc.COLOR_RGB2Lab);
+		//	Imgproc.cvtColor(sampledimage3, sampledimage3,
+			//		Imgproc.COLOR_RGB2Lab);
+			/*
+			 * for (int y = 0; y < mGray.rows(); y++) { for (int x = 0; x <
+			 * mGray.cols(); x++) { int index = y * mGray.rows() + x; int
+			 * cluster_index = (int) labels.get(index, 0)[0];
+			 * 
+			 * if ((int) cluster_index == 0) { // Log.v("Cluster index", " " +
+			 * cluster_index);
+			 * 
+			 * sampledimage1.put(y, x, clusteredimage.get(y, x)); } else if
+			 * ((int) cluster_index == 1) { // Log.v("Cluster index", " " +
+			 * cluster_index); sampledimage2.put(y, x, clusteredimage.get(y,
+			 * x)); } else { // Log.v("Cluster index", " " + cluster_index);
+			 * sampledimage3.put(y, x, clusteredimage.get(y, x)); } } }
+			 */
 
-					if ((int) cluster_index == 0) {
-						// Log.v("Cluster index", " " + cluster_index);
-
-						sampledimage1.put(y, x, clusteredimage.get(y, x));
-					} else if ((int) cluster_index == 1) {
-						// Log.v("Cluster index", " " + cluster_index);
-						sampledimage2.put(y, x, clusteredimage.get(y, x));
-					} else {
-						// Log.v("Cluster index", " " + cluster_index);
-						sampledimage3.put(y, x, clusteredimage.get(y, x));
-					}
-				}
-			}*/
-			
 			Log.v("elements in center1", centers.size() + "  ");
 			Mat clust1 = new Mat();
 			Mat clust2 = new Mat();
@@ -292,6 +294,9 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 			// List<Mat> channelsfirst_min = new ArrayList<Mat>();
 			// Core.split(first_min, channelsfirst_min);
 			channel1 = new MatOfInt(1);
+			Mat black=Mat.zeros(mRgba.size(), mRgba.type());
+			Imgproc.cvtColor(black, black, Imgproc.COLOR_RGB2Lab);
+			Log.e("black lab value"," l"+black.get(0, 0)[0]+" a"+black.get(0, 0)[1]+" b"+black.get(0, 0)[2] );
 			mask = new Mat();
 			mhistsize = new MatOfInt(256);
 			mRanges = new MatOfFloat(0f, 256f);
@@ -346,7 +351,7 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 				output = first_min;
 			Log.i("Centers:", " - ");
 			Log.e("Points count:", "sent return");
-             Imgproc.cvtColor(output, output, Imgproc.COLOR_Lab2RGB);
+			Imgproc.cvtColor(output, output, Imgproc.COLOR_Lab2RGB);
 		} catch (Exception e) {
 			Log.e("error", e.toString());
 			return mGray;
@@ -480,7 +485,10 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 
 		List<Mat> clusters = new ArrayList<Mat>();
 		for (int i = 0; i < centers.rows(); i++) {
-			clusters.add(Mat.zeros(cutout.size(), cutout.type()));
+			Mat black=Mat.zeros(cutout.size(), mRgba.type());
+			Imgproc.cvtColor(black, black, Imgproc.COLOR_RGB2Lab);
+		//	clusters.add(Mat.zeros(cutout.size(), cutout.type()));
+			clusters.add(black);
 		}
 
 		Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
@@ -491,27 +499,18 @@ public class MainActivity extends Activity implements CvCameraViewListener2 {
 		for (int y = 0; y < cutout.rows(); y++) {
 			for (int x = 0; x < cutout.cols(); x++) {
 				int label = (int) labels.get(rows, 0)[0];
-				if (reqlabel == 4) {
-					// Log.v("Cluster index", " " + label);
-					int r = (int) centers.get(label, 2)[0];
-					int g = (int) centers.get(label, 1)[0];
-					int b = (int) centers.get(label, 0)[0];
-					counts.put(label, counts.get(label) + 1);
-					clusters.get(label).put(y, x, b, g, r);
-					rows++;
-				} else {
-					if (label == reqlabel) {
-						int r = (int) centers.get(label, 2)[0];
-						int g = (int) centers.get(label, 1)[0];
-						int b = (int) centers.get(label, 0)[0];
-						counts.put(label, counts.get(label) + 1);
-						clusters.get(label).put(y, x, b, g, r);
-						rows++;
-					}
-				}
 
+				// Log.v("Cluster index", " " + label);
+				int b = (int) cutout.get(y, x)[2];
+				int a = (int) cutout.get(y, x)[1];
+				int l = (int) cutout.get(y, x)[0];
+				counts.put(label, counts.get(label) + 1);
+				clusters.get(label).put(y, x, l, a, b);
+				rows++;
 			}
+
 		}
+
 		System.out.println(counts);
 		return clusters;
 	}
